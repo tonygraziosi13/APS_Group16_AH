@@ -2,9 +2,10 @@ import datetime
 from typing import List
 from cryptography import x509
 from cryptography.x509.oid import NameOID
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding
+
+from utils.validator import Validator
 
 
 class CertificateManager:
@@ -13,6 +14,7 @@ class CertificateManager:
         self._public_key = public_key
         self._certificati_uni: List[dict] = []
         self._generate_root_cert()
+        self._validator = Validator()
 
     def _generate_root_cert(self):
         subject = issuer = x509.Name([
@@ -36,6 +38,12 @@ class CertificateManager:
         return self.root_cert
 
     def issue_certificate(self, public_key, university_id, official_name, university_code, location):
+        # Validazione input
+        self._validator.validate_string(university_id, "university_id")
+        self._validator.validate_only_char(official_name, "official_name")
+        self._validator.validate_string(university_code, "university_code")
+        self._validator.validate_only_char(location, "location")
+
         subject = x509.Name([
             x509.NameAttribute(NameOID.COUNTRY_NAME, "IT"),
             x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, "Italia"),
@@ -70,6 +78,7 @@ class CertificateManager:
         return cert, self.root_cert
 
     def revoke_certificate(self, university_id: str) -> bool:
+        self._validator.validate_string(university_id, "university_id")
         for entry in self._certificati_uni:
             if entry["id_university"] == university_id and entry["revoked"] is None:
                 entry["revoked"] = datetime.date.today().isoformat()
@@ -79,16 +88,11 @@ class CertificateManager:
         return False
 
     def is_certificate_revoked(self, certificate) -> bool:
-        for entry in self._certificati_uni:
-            if entry["certificate"] == certificate:
-                return entry["revoked"] is not None
-        return False
+        return any(entry["certificate"] == certificate and entry["revoked"] is not None for entry in self._certificati_uni)
 
     def is_revoked_by_university(self, university_id: str) -> bool:
-        for entry in self._certificati_uni:
-            if entry["id_university"] == university_id:
-                return entry["revoked"] is not None
-        return False
+        self._validator.validate_string(university_id, "university_id")
+        return any(entry["id_university"] == university_id and entry["revoked"] is not None for entry in self._certificati_uni)
 
     def find_university_id(self, certificate) -> str:
         for entry in self._certificati_uni:
@@ -130,4 +134,3 @@ class CertificateManager:
         except Exception as e:
             print(f"[MobilityCA] Firma non valida: {e}")
             return False
-
