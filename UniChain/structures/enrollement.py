@@ -1,4 +1,4 @@
-from utils.validator import Validator
+from ..utils.validator import Validator
 
 class Enrollement:
     def __init__(
