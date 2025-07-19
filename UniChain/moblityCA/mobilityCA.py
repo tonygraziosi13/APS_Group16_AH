@@ -1,6 +1,6 @@
 from cryptography.hazmat.primitives.asymmetric import rsa
 from UniChain.moblityCA.certificate_manager import CertificateManager
-from utils.validator import Validator
+from ..utils.validator import Validator
 
 
 class MobilityCA:

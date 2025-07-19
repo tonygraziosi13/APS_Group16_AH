@@ -5,7 +5,7 @@ from cryptography.x509.oid import NameOID
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 
-from utils.validator import Validator
+from ..utils.validator import Validator
 
 
 class CertificateManager:
