@@ -24,6 +24,9 @@ class University:
         self._certificate = None
         self._root_cert = None
 
+    def get_private_key(self):
+        return self._private_key
+
     @staticmethod
     def _generate_private_key():
         """

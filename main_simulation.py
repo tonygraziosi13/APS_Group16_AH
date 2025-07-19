@@ -21,28 +21,53 @@ from datetime import datetime
 # === [FASE 1] ACCREDITAMENTO ===
 print("[Fase 1] ACCREDITAMENTO DI 4 UNIVERSITA PRESSO UNICHAIN\n")
 
+print("[Fase 1.1] UNIVERSITÉ DE RENNES\n")
 mobility_ca = MobilityCA()
-
 u_rennes = University("urn:rennes", "Université de Rennes", "FR-REN001", "Francia", mobility_ca)
+print("Chiavi RSA generate localmente dall’università.")
+print("Chiave pubblica:", u_rennes.get_serialized_public_key())
+
+print("\n[Fase 1.2] UNIVERSITÉ DE RENNES: RICHIESTA ACCREDITAMENTO A MOBILITYCA\n")
+u_rennes.request_accreditation()
+
+print("\nL’ente MobilityCA ha verificato i dati e rilasciato un certificato X.509 firmato.")
+print("Certificato registrato localmente sia dalla MobilityCA sia dall’università.")
+
 u_salerno = University("urn:unisa", "Università di Salerno", "IT-SAL001", "Italia", mobility_ca)
 u_bologna = University("urn:unibo", "Università di Bologna", "IT-BO001", "Italia", mobility_ca)
 u_lisboa = University("urn:ulisboa", "Universidade de Lisboa", "PT-LIS001", "Portogallo", mobility_ca)
 
-for u in [u_rennes, u_salerno, u_bologna, u_lisboa]:
+for u in [u_salerno, u_bologna, u_lisboa]:
     u.request_accreditation()
 
-# === [FASE 2] RICHIESTA CAD DA PARTE DI ALICE ===
-print("\n[Fase 2] ALICE CHIEDE LA CREDENZIALE ALL'UNIVERSITE DE RENNES PER IL SUO PERIODO ERASMUS\n")
+# === [FASE 1.4] STAMPA DEL REGISTRO PUBBLICO ===
+print("\n[Fase 1.4] REGISTRO PUBBLICO DELLE UNIVERSITÀ ACCREDITATE\n")
+registry = mobility_ca.get_public_registry()
+
+for i, entry in enumerate(registry, 1):
+    print(f"Università #{i}")
+    print(f"   - ID: {entry['university_id']}")
+    print(f"   - Stato revoca: {'REVOCATO' if entry['revoked'] else 'ATTIVO'}")
+    print(f"   - Chiave pubblica:\n     {entry['public_key']}")
+    print()
+
+# === [FASE 2] AUTENTICAZIONE FEDERATA DI ALICE TRAMITE SPID ===
+print("\n[Fase 2.0] ALICE ACCEDE AL PORTALE DELL’UNIVERSITÉ DE RENNES TRAMITE AUTENTICAZIONE FEDERATA")
+
+print("Alice effettua l'accesso al portale dell'università come Service Provider (SP),")
+print("L’autenticazione ha successo e viene creata una sessione sicura per l’utente.")
+print("Alice è ora autenticata e può accedere ai servizi universitari, inclusa la richiesta della credenziale.\n")
+
 
 alice_wallet = StudentWallet("Alice")
 
 credential_subject = CredentialSubject(
-    student_id="alice001",
+    student_id="8742",
     name="Alice Rossi",
     date_of_birth="2002-07-11",
     residence="Salerno",
     phone_number="+393331234567",
-    email="alice.rossi@example.com",
+    email="alice.rossi@studenti.it",
     validator = u_rennes.mobility_ca.get_validator()  # usa validator condiviso
 )
 
@@ -50,26 +75,26 @@ enrollment = Enrollment(
     academic_year=2024,
     regulation_year=2023,
     enrollment_date="2023-10-01",
-    faculty="Informatica",
-    course_name="Informatica",
-    course_code="INF2024",
+    faculty="INGEGNERIA INFORMATICA",
+    course_name="CORSO DI LAUREA MAGISTRALE",
+    course_code="LM-32",
     career_status="attivo"
 )
 
 degree = Degree(
-    title_name="Semestre Erasmus",
-    degree_level="certificazione",
-    graduation_date="2025-04-15",
-    final_grade="0",
-    awarding_institution=u_rennes.official_name,
-    thesis_title="",
+    title_name="Laurea in Ingegneria Informatica",
+    degree_level="triennale",
+    graduation_date="2024-09-15",
+    final_grade="100",
+    awarding_institution=u_salerno.official_name,
+    thesis_title="UN SISTEMA PER LA GESTIONE DI NOTIFICHE WEB PUSH",
     honors=""
 )
 
 exams = [
-    ExamRecord("Algoritmi e Protocolli per la Sicurezza", "0622720", "scritto", "obbligatoria", 24, 6, "2025-01-15", "Informatica"),
-    ExamRecord("Intelligenza Artificiale", "0622730", "orale", "obbligatoria", 27, 6, "2025-02-10", "Informatica"),
-    ExamRecord("Reti di Calcolatori", "0622740", "scritto", "obbligatoria", 30, 6, "2025-03-01", "Informatica")
+    ExamRecord("Algoritmi e Protocolli per la Sicurezza", "0622720", "scritto", "obbligatoria", 30, 9, "2025-01-15", "Ingegneria Informatica"),
+    ExamRecord("Intelligenza Artificiale", "0622730", "orale", "obbligatoria", 27, 9, "2025-02-10", "Ingegneria Informatica"),
+    ExamRecord("Automazione", "0622740", "scritto", "obbligatoria", 18, 9, "2025-03-01", "Ingegneria Informatica")
 ]
 
 validity = ValidityPeriod(
@@ -92,39 +117,63 @@ cred = AcademicCredential(
     optional_activities=[]
 )
 
-# === [FASE 3] FIRMA UNIVERSITARIA E INVIO ===
-print("\n[Fase 3] L'UNIVERSITE DE RENNES EMETTE IL CAD, LO FIRMA E LO INVIA AD ALICE\n")
+# === [FASE 3] EMISSIONE, FIRMA E CONSEGNA DELLA CREDENZIALE ===
+print("\n[Fase 3] L'UNIVERSITÉ DE RENNES EMETTE LA CREDENZIALE, LA FIRMA DIGITALMENTE E LA CONSEGNA AD ALICE\n")
 
-# Firma il CAD
+# Serializzazione e firma
+print("Serializzazione della credenziale accademica digitale (CAD)...")
 serialized = str(cred.to_dict()).encode("utf-8")
+print("Calcolo firma digitale della credenziale...")
+
 signature = u_rennes.sign_message(serialized)
 
+print("Firma generata dall’università con chiave privata.")
+print(f"Firma (SHA256-RSA): {signature.hex()[:64]}...")
+
+# Inserimento del proof nella credenziale
 proof = Proof(
     signature_value=signature.hex(),
     verification_method=u_rennes.get_serialized_public_key()
 )
-
 cred.set_proof(proof)
 
-# Alice riceve la credenziale nel wallet
+print("Inserimento firma e chiave pubblica dell’università all’interno della credenziale.")
+
+# Invio della credenziale ad Alice
 credential_id = "CAD-ALICE-ERASMUS-FR001"
 alice_wallet.store_credential(credential_id, cred)
 
-# === [FASE 4] ANCORAGGIO SULLA BLOCKCHAIN ===
-blockchain = Blockchain()
+print("La credenziale firmata è stata inviata in modo sicuro al wallet di Alice.")
+print("Alice ha ricevuto e memorizzato la credenziale nel proprio portafoglio digitale.\n")
 
-# Calcolo hash CAD per la transazione
+
+# === [FASE 4] ANCORAGGIO DEL CAD SULLA BLOCKCHAIN ===
+print("\n[Fase 4] ANCORAGGIO DELLA CREDENZIALE SULLA BLOCKCHAIN\n")
+
+# Step 1 – Inizializza la blockchain (crea blocco di genesi)
+blockchain = Blockchain()
+print("Blockchain inizializzata con blocco di genesi.")
+
+# Step 2 – Calcola hash del CAD (serve per la transazione)
 cred_hash = hashlib.sha256(str(cred.to_dict()).encode()).hexdigest()
 wallet_address = alice_wallet.get_wallet_address()
+print("Hash del CAD calcolato.")
+print(f"   - Hash: {cred_hash}")
+print(f"   - Wallet di Alice: {wallet_address}")
 
+# Step 3 – Crea oggetto Transaction e firma con chiave privata dell’università
 tx = Transaction(
     credential_hash=cred_hash,
     credential_unique_id=credential_id,
     student_wallet_address=wallet_address
 )
-tx.sign_transaction("UNIVERSITY_PRIVATE_KEY")  # simulata
+tx.sign_transaction(u_rennes.get_private_key())
+print("Transazione creata e firmata digitalmente dall’università.")
+print(f"   - Hash della transazione: {tx.transaction_hash}")
+print(f"   - Firma (SHA256-RSA): {tx.signature[:64]}...")
 
-# Costruzione del Merkle Tree (anche se non usato direttamente nei blocchi, serve la root)
+# Step 4 – Calcola Merkle Root degli attributi della credenziale
+print("\nCalcolo della Merkle Root degli attributi del CAD...")
 flat_attrs = []
 def flatten(prefix, val):
     if isinstance(val, dict):
@@ -138,53 +187,71 @@ def flatten(prefix, val):
 
 flatten("credential", cred.to_dict())
 merkle_root = MerkleTree(flat_attrs).get_root()
+print(f"   - Merkle Root calcolata: {merkle_root}")
 
-# Inserimento nella blockchain
+# Step 5 – Firma del blocco e aggiunta alla blockchain
+print("\nCreazione del blocco e firma digitale del payload...")
 blockchain.add_block(
     transaction=tx,
     version="1.0",
     block_number=1,
-    block_proposer=u_rennes.university_id,
-    signature="FIRMA_BLOCCO_SIMULATA",
+    block_proposer_obj=u_rennes,
+    attributes_merkle_root=merkle_root
 )
-blockchain.chain[-1].attributes_merkle_root = merkle_root
+
+# Step 6 – Verifica integrità catena (opzionale)
+if blockchain.is_chain_valid():
+    print("La blockchain è valida e coerente.")
+else:
+    print("Errore: la blockchain contiene blocchi non validi.")
+
 
 # === [FASE 5] PRESENTAZIONE SELETTIVA A UNISA ===
-print("\n[Fase 4] ALICE PRESENTA SOLO PARTE DEL CAD ALL'UNIVERSITA DI SALERNO PER IL RICONOSCIMENTO DEI CREDITI\n")
+print("\n[Fase 5] ALICE ACCEDE AL PORTALE DELL’UNIVERSITÀ DI SALERNO TRAMITE AUTENTICAZIONE FEDERATA")
+
+print("Alice effettua l'accesso al portale dell'università (SP) tramite Identity Provider federato (es. SPID o CIE ID).")
+print("L’autenticazione ha successo e viene creata una sessione sicura per l’utente.")
+print("Alice è ora autenticata e può accedere ai servizi di riconoscimento crediti.\n")
+
+print("[Fase 5.1] ALICE PRESENTA SOLO PARTE DEL CAD ALL’UNISA PER IL RICONOSCIMENTO DEI CREDITI\n")
 
 reveal_fields = ["courseName", "courseCode", "grade"]
 presentation_proof = alice_wallet.generate_presentation_proof(credential_id, reveal_fields)
 
 verifier = Verifier(blockchain)
 
-# Verifica firma
-print("Verifica firma di Alice sulla Merkle Root...")
+# === STEP 1: Verifica firma di Alice ===
+print("Step 1 – Verifica firma di Alice sulla Merkle Root...")
 is_signature_valid = verifier.verify_student_signature(
     merkle_root=presentation_proof["merkleRoot"],
     signature_hex=presentation_proof["signature"],
     public_key_pem=presentation_proof["publicKey"]
 )
-print(f"Firma di Alice: {'VALIDA' if is_signature_valid else 'NON VALIDA'}\n")
+print(f"    -Firma digitale di Alice: {'VALIDA' if is_signature_valid else 'NON VALIDA'}\n")
 
-# Verifica root
-print("Verifica corrispondenza Merkle Root sulla blockchain...")
+# === STEP 2: Verifica Merkle Root sulla blockchain ===
+print("Step 2 – Verifica della Merkle Root sulla blockchain...")
 is_root_on_chain = verifier.check_merkle_root_on_chain(credential_id, presentation_proof["merkleRoot"])
-print(f"Merkle Root ancorata: {'TROVATA' if is_root_on_chain else 'NON TROVATA'}\n")
+print(f"    -Merkle Root presente sulla blockchain: {'TROVATA' if is_root_on_chain else 'NON TROVATA'}\n")
 
-# Stato revoca
-print("Verifica stato di revoca della credenziale...")
+# === STEP 3: Verifica che la credenziale non sia stata revocata ===
+print("Step 3 – Verifica dello stato di revoca della credenziale...")
 is_not_revoked = verifier.check_revocation_status(credential_id)
-print(f"Stato della credenziale: {'NON REVOCATA' if is_not_revoked else 'REVOCATA'}\n")
+print(f"    -Stato della credenziale: {'NON REVOCATA' if is_not_revoked else 'REVOCATA'}\n")
 
-# Verifica singole Merkle Proof
+# === STEP 4: Verifica crittografica Merkle Proof per ciascun attributo ===
+print("Step 4 – Verifica Merkle Proof per ciascun attributo rivelato:\n")
 for label, value in presentation_proof["revealedAttributes"].items():
     proof = presentation_proof["merkleProofs"][label]
-    print(f"Verifica Merkle Proof per: {label} = {value}")
+    print(f"    Attributo: {label}")
+    print(f"     -Valore dichiarato: {value}")
     is_valid = verifier.verify_merkle_proof(value, proof, presentation_proof["merkleRoot"])
-    print(f"Proof: {'VALIDA' if is_valid else 'NON VALIDA'}\n")
+    print(f"     -Merkle Proof: {'VALIDA' if is_valid else 'NON VALIDA'}\n")
 
-# Esito finale
+# === STEP 5: Esito finale ===
+print("[RISULTATO FINALE] Verifica complessiva della presentazione selettiva:")
 if is_signature_valid and is_root_on_chain and is_not_revoked:
-    print("[RISULTATO FINALE] ALICE RISULTA AUTENTICATA E LA SUA CREDENZIALE RISULTA VALIDA.\n")
+    print("Alice è autenticata, la credenziale è integra e verificabile. Verifica conclusa con successo.\n")
 else:
-    print("[RISULTATO FINALE] VERIFICA FALLITA.\n")
+    print("Verifica fallita: uno o più controlli non sono stati superati.\n")
+
