@@ -1,48 +1,48 @@
-import hashlib
-from UniChain.blockchain.transaction import Transaction
 from UniChain.blockchain.blockchain import Blockchain
-
-def verify_signature(transaction, public_key):
-    try:
-        # Verifica che la firma sia corretta
-        if transaction.signature == public_key + transaction.transaction_hash:
-            print(f"Firma della transazione {transaction.transaction_hash} verificata correttamente.")
-            return True
-        else:
-            return False
-    except Exception as e:
-        print(f"Errore nella verifica della firma: {e}")
-        return False
+from UniChain.blockchain.transaction import Transaction
 
 def main():
-    # Crea la credenziale per uno studente
-    credential_hash = hashlib.sha256("Credential for Alice".encode('utf-8')).hexdigest()
-    credential_unique_id = "uni_credential_001"
-    student_wallet_address = hashlib.sha256("student_wallet_12345".encode('utf-8')).hexdigest()
-
-    # Crea la transazione
-    transaction = Transaction(credential_hash, credential_unique_id, student_wallet_address)
-
-    # Firma la transazione con una chiave privata simulata
-    university_private_key = "private_key_123"
-    transaction.sign_transaction(university_private_key)
-
-    # Verifica la firma con una chiave pubblica simulata
-    university_public_key = "private_key_123"  # In un vero scenario sarebbe una chiave pubblica separata
-    if verify_signature(transaction, university_public_key):
-        print("Firma della transazione verificata.\n")
-    else:
-        print("Firma della transazione non valida.\n")
-
-    # Crea la blockchain e aggiungi la transazione
+    # 1. Crea la blockchain
     blockchain = Blockchain()
-    blockchain.add_transaction(transaction)
-    blockchain.add_block(transaction, version="1.0", block_number=1, block_proposer="Université de Rennes", signature=transaction.signature)
 
-    # Verifica la validità della blockchain
-    print("La blockchain è valida?", blockchain.is_chain_valid())
+    # 2. Crea una transazione di emissione (es. Alice)
+    emission_tx = Transaction(
+        credential_hash="abc123hash",
+        credential_unique_id="cred001",
+        student_wallet_address="wallet_xyz"
+    )
+    emission_tx.sign_transaction("UNIVERSITY_PRIVATE_KEY")
 
-    print("\n--- Fine simulazione ---\n")
+    # 3. Aggiungi il blocco di emissione
+    blockchain.add_block(
+        transaction=emission_tx,
+        version="1.0",
+        block_number=1,
+        block_proposer="Université de Rennes",
+        signature="signed_by_rennes"
+    )
 
+    # 4. Revoca la credenziale
+    blockchain.revoke_credential(
+        credential_unique_id="cred001",
+        credential_hash="abc123hash",
+        student_wallet_address="wallet_xyz",
+        version="1.0",
+        block_number=2,
+        block_proposer="Université de Rennes",
+        signature="signed_by_rennes"
+    )
+
+    # 5. Stampa la blockchain
+    print("\n📦 Stato attuale della blockchain:\n")
+    for block in blockchain.chain:
+        print(f"Blocco #{block.block_number}")
+        print(f"Tipo transazione: {block.transaction_type}")
+        print(f"Hash blocco: {block.block_hash}")
+        print(f"Transazione: {block.transaction}")
+        print(f"Revocata: {block.transaction.revocation_status}")
+        print("-" * 60)
+
+# 🔥 IMPORTANTE: chiama la funzione main!
 if __name__ == "__main__":
     main()

@@ -3,6 +3,10 @@ import datetime
 
 
 class Validator:
+    """
+    Classe di utilità che fornisce metodi statici per validare campi comuni
+    all'interno delle strutture delle credenziali accademiche.
+    """
 
     @staticmethod
     def validate_string(val, field):
@@ -75,6 +79,3 @@ class Validator:
         if val.lower() not in allowed:
             raise ValueError(f"{field} deve essere 'scritto' o 'orale'.")
         return val
-
-
-

@@ -1,7 +1,12 @@
-from ..utils.validator import Validator
+from UniChain.utils.validator import Validator
 
 
 class ExamRecord:
+    """
+    Rappresenta un esame superato dallo studente.
+    Include informazioni su corso, tipo di esame, CFU, voto, data e facoltà.
+    """
+
     def __init__(self,
                  course_name: str,
                  course_code: str,
@@ -11,7 +16,10 @@ class ExamRecord:
                  course_credits: int,
                  date: str,
                  faculty: str):
-
+        """
+        Inizializza un oggetto ExamRecord con i dettagli di un esame superato.
+        Tutti i campi sono validati tramite Validator.
+        """
         self.course_name = Validator.validate_string(course_name, "courseName")
         self.course_code = Validator.validate_string(course_code, "courseCode")
         self.type_examination = Validator.validate_only_char(type_examination, "typeExamination")
@@ -22,6 +30,9 @@ class ExamRecord:
         self.faculty = Validator.validate_only_char(faculty, "faculty")
 
     def to_dict(self):
+        """
+        Serializza l'oggetto ExamRecord in un dizionario JSON compatibile.
+        """
         return {
             "Type": "EsameSuperato",
             "courseName": self.course_name,
@@ -33,3 +44,6 @@ class ExamRecord:
             "date": self.date,
             "faculty": self.faculty
         }
+
+    def __repr__(self):
+        return f"ExamRecord({self.course_code}, grade={self.grade}, cfu={self.course_credits})"

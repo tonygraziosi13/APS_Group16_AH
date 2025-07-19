@@ -1,6 +1,12 @@
-from ..utils.validator import Validator
+from UniChain.utils.validator import Validator
 
-class Enrollement:
+
+class Enrollment:
+    """
+    Rappresenta l'iscrizione universitaria dello studente.
+    Contiene informazioni su anno accademico, corso, facoltà e stato della carriera.
+    """
+
     def __init__(
         self,
         academic_year: int,
@@ -11,6 +17,10 @@ class Enrollement:
         course_code: str,
         career_status: str
     ):
+        """
+        Inizializza l'iscrizione dello studente con i dati del percorso universitario.
+        Tutti i campi vengono validati tramite Validator.
+        """
         self.academic_year = Validator.validate_year(academic_year, "academicYear")
         self.regulation_year = Validator.validate_year(regulation_year, "regulationYear")
         self.enrollment_date = Validator.validate_date(enrollment_date, "enrollmentDate")
@@ -20,6 +30,9 @@ class Enrollement:
         self.career_status = Validator.validate_string(career_status, "careerStatus")
 
     def to_dict(self):
+        """
+        Serializza i dati dell'iscrizione in un dizionario JSON-compatibile.
+        """
         return {
             "academicYear": self.academic_year,
             "regulationYear": self.regulation_year,
