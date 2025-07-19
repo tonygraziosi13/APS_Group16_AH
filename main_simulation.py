@@ -337,3 +337,55 @@ if is_signature_valid_after_revocation and is_root_on_chain_after_revocation and
     print("✅ Alice è autenticata e la credenziale è integra. Verifica conclusa con successo.\n")
 else:
     print("❌ Verifica fallita: la credenziale è stata REVOCATA o uno dei controlli non è stato superato.\n")
+
+# === [FASE 8] REVOCA DELL'ACCREDITAMENTO DI U_RENNES DA PARTE DELLA MOBILITY CA ===
+print("\n[Fase 8] La MobilityCA revoca l’accreditamento di U_RENNES\n")
+
+# Simuliamo la revoca del certificato dell'università U_RENNES
+certificate_u_rennes = u_rennes.get_certificate()
+
+# Controllo che il certificato sia valido prima della revoca
+is_cert_revoked_before = mobility_ca.is_certificate_revoked(certificate_u_rennes)
+print(f"   - Stato certificato U_RENNES prima della revoca: {'REVOCATO' if is_cert_revoked_before else 'VALIDO'}")
+
+# Revoca del certificato
+mobility_ca.revoke_certificate(u_rennes.university_id)
+print(f"   - Certificato di U_RENNES revocato dalla MobilityCA.")
+
+# Verifica stato del certificato dopo la revoca
+is_cert_revoked_after = mobility_ca.is_certificate_revoked(certificate_u_rennes)
+print(f"   - Stato certificato U_RENNES dopo la revoca: {'REVOCATO' if is_cert_revoked_after else 'VALIDO'}")
+
+# === [FASE 9] TEST DOPO LA REVOCA DEL CERTIFICATO DELL’UNIVERSITÀ ===
+print("\n[Fase 9] Verifica di una credenziale emessa da U_RENNES dopo la revoca del suo certificato\n")
+
+# Alice prova a presentare la credenziale emessa da U_RENNES a UNISA
+reveal_fields_cert_revoked = ["courseName", "courseCode", "grade"]
+presentation_proof_cert_revoked = alice_wallet.generate_presentation_proof(credential_id, reveal_fields_cert_revoked)
+
+# STEP 1: Verifica firma di Alice sulla Merkle Root
+print("Step 1 – Verifica firma di Alice sulla Merkle Root...")
+is_signature_valid_cert_revoked = verifier.verify_student_signature(
+    merkle_root=presentation_proof_cert_revoked["merkleRoot"],
+    signature_hex=presentation_proof_cert_revoked["signature"],
+    public_key_pem=presentation_proof_cert_revoked["publicKey"]
+)
+print(f"    -Firma digitale di Alice: {'VALIDA' if is_signature_valid_cert_revoked else 'NON VALIDA'}\n")
+
+# STEP 2: Verifica Merkle Root sulla blockchain
+print("Step 2 – Verifica della Merkle Root sulla blockchain...")
+is_root_on_chain_cert_revoked = verifier.check_merkle_root_on_chain(credential_id, presentation_proof_cert_revoked["merkleRoot"])
+print(f"    -Merkle Root presente sulla blockchain: {'TROVATA' if is_root_on_chain_cert_revoked else 'NON TROVATA'}\n")
+
+# STEP 3: Verifica che il certificato dell’università non sia stato revocato
+print("Step 3 – Verifica stato del certificato dell’università...")
+university_certificate = u_rennes.get_certificate()
+is_university_cert_revoked = mobility_ca.is_certificate_revoked(university_certificate)
+print(f"    -Certificato dell’università: {'REVOCATO' if is_university_cert_revoked else 'VALIDO'}\n")
+
+# STEP 4: Esito finale
+print("[RISULTATO FINALE] Verifica con certificato universitario revocato:")
+if is_signature_valid_cert_revoked and is_root_on_chain_cert_revoked and not is_university_cert_revoked:
+    print("✅ Alice è autenticata e la credenziale è integra. Verifica conclusa con successo.\n")
+else:
+    print("❌ Verifica fallita: il certificato di U_RENNES è REVOCATO o uno dei controlli non è stato superato.\n")
