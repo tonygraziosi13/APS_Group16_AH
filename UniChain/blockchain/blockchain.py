@@ -100,7 +100,7 @@ class Blockchain:
         Genera una transazione di revoca e la ancora sulla blockchain
         come blocco firmato digitalmente dall’università.
         """
-        # 🔒 Controlla se la credenziale esiste già ed è di tipo EMISSION
+        # Controlla se la credenziale esiste già ed è di tipo EMISSION
         found = False
         for block in reversed(self.chain):
             tx = block.transaction
@@ -113,7 +113,7 @@ class Blockchain:
         if not found:
             raise Exception(f"Impossibile revocare: credenziale {credential_unique_id} non trovata nella blockchain.")
 
-        # ✅ Se passa il controllo, crea la transazione di revoca
+        # Se passa il controllo, crea la transazione di revoca
         revocation_tx = Transaction(
             credential_hash=credential_hash,
             credential_unique_id=credential_unique_id,

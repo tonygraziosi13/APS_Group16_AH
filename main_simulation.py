@@ -334,9 +334,9 @@ print(f"    -Stato della credenziale: {'NON REVOCATA' if is_not_revoked_after_re
 # === STEP 4: Esito finale ===
 print("[RISULTATO FINALE] Verifica dopo la revoca:")
 if is_signature_valid_after_revocation and is_root_on_chain_after_revocation and is_not_revoked_after_revocation:
-    print("✅ Alice è autenticata e la credenziale è integra. Verifica conclusa con successo.\n")
+    print("Alice è autenticata e la credenziale è integra. Verifica conclusa con successo.\n")
 else:
-    print("❌ Verifica fallita: la credenziale è stata REVOCATA o uno dei controlli non è stato superato.\n")
+    print("Verifica fallita: la credenziale è stata REVOCATA o uno dei controlli non è stato superato.\n")
 
 # === [FASE 8] REVOCA DELL'ACCREDITAMENTO DI U_RENNES DA PARTE DELLA MOBILITY CA ===
 print("\n[Fase 8] La MobilityCA revoca l’accreditamento di U_RENNES\n")
@@ -386,6 +386,6 @@ print(f"    -Certificato dell’università: {'REVOCATO' if is_university_cert_r
 # STEP 4: Esito finale
 print("[RISULTATO FINALE] Verifica con certificato universitario revocato:")
 if is_signature_valid_cert_revoked and is_root_on_chain_cert_revoked and not is_university_cert_revoked:
-    print("✅ Alice è autenticata e la credenziale è integra. Verifica conclusa con successo.\n")
+    print("Alice è autenticata e la credenziale è integra. Verifica conclusa con successo.\n")
 else:
-    print("❌ Verifica fallita: il certificato di U_RENNES è REVOCATO o uno dei controlli non è stato superato.\n")
+    print("Verifica fallita: il certificato di U_RENNES è REVOCATO o uno dei controlli non è stato superato.\n")
