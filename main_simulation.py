@@ -255,3 +255,85 @@ if is_signature_valid and is_root_on_chain and is_not_revoked:
 else:
     print("Verifica fallita: uno o più controlli non sono stati superati.\n")
 
+# === [FASE 6] REVOCA DELLA CREDENZIALE DI ALICE ===
+print("\n[Fase 6] L'UNIVERSITÉ DE RENNES REVOCA LA CREDENZIALE DI ALICE\n")
+
+# Parametri per la revoca
+revoked_credential_id = credential_id
+revoked_credential_hash = cred_hash
+revoked_wallet_address = wallet_address
+
+# Creazione della transazione di revoca
+revocation_tx = Transaction(
+    credential_hash=revoked_credential_hash,
+    credential_unique_id=revoked_credential_id,
+    student_wallet_address=revoked_wallet_address,
+    revocation_status=True,
+    transaction_type="REVOCA"
+)
+revocation_tx.sign_transaction(u_rennes.get_private_key())
+
+print("Transazione di revoca creata e firmata digitalmente dall’università.")
+print(f"   - Hash della transazione di revoca: {revocation_tx.transaction_hash}")
+print(f"   - Firma (SHA256-RSA): {revocation_tx.signature[:64]}...")
+
+# Calcolo Merkle Root per la revoca (opzionale)
+print("\nCalcolo della Merkle Root per la revoca...")
+flat_attrs_revocation = []
+def flatten_revocation(prefix, val):
+    if isinstance(val, dict):
+        for k, v in val.items():
+            flatten_revocation(f"{prefix}.{k}", v)
+    elif isinstance(val, list):
+        for i, v in enumerate(val):
+            flatten_revocation(f"{prefix}[{i}]", v)
+    else:
+        flat_attrs_revocation.append((prefix, str(val)))
+
+flatten_revocation("credential", cred.to_dict())
+merkle_root_revocation = MerkleTree(flat_attrs_revocation).get_root()
+print(f"   - Merkle Root calcolata per la revoca: {merkle_root_revocation}")
+
+# Creazione e firma del blocco di revoca
+print("\nCreazione del blocco di revoca e firma digitale del payload...")
+blockchain.add_block(
+    transaction=revocation_tx,
+    version="1.0",
+    block_number=len(blockchain.chain),
+    block_proposer_obj=u_rennes,
+    attributes_merkle_root=merkle_root_revocation
+)
+
+print("Blocco di revoca aggiunto alla blockchain.")
+
+# === [FASE 7] TEST DOPO LA REVOCA: ALICE PROVA A PRESENTARE LA CREDENZIALE ===
+print("\n[Fase 7] TEST DOPO LA REVOCA: ALICE PROVA A PRESENTARE LA CREDENZIALE A UNISA\n")
+
+reveal_fields_after_revocation = ["courseName", "courseCode", "grade"]
+presentation_proof_after_revocation = alice_wallet.generate_presentation_proof(credential_id, reveal_fields_after_revocation)
+
+# === STEP 1: Verifica firma di Alice ===
+print("Step 1 – Verifica firma di Alice sulla Merkle Root (dopo la revoca)...")
+is_signature_valid_after_revocation = verifier.verify_student_signature(
+    merkle_root=presentation_proof_after_revocation["merkleRoot"],
+    signature_hex=presentation_proof_after_revocation["signature"],
+    public_key_pem=presentation_proof_after_revocation["publicKey"]
+)
+print(f"    -Firma digitale di Alice: {'VALIDA' if is_signature_valid_after_revocation else 'NON VALIDA'}\n")
+
+# === STEP 2: Verifica Merkle Root sulla blockchain ===
+print("Step 2 – Verifica della Merkle Root sulla blockchain (dopo la revoca)...")
+is_root_on_chain_after_revocation = verifier.check_merkle_root_on_chain(credential_id, presentation_proof_after_revocation["merkleRoot"])
+print(f"    -Merkle Root presente sulla blockchain: {'TROVATA' if is_root_on_chain_after_revocation else 'NON TROVATA'}\n")
+
+# === STEP 3: Verifica che la credenziale non sia stata revocata ===
+print("Step 3 – Verifica dello stato di revoca della credenziale...")
+is_not_revoked_after_revocation = verifier.check_revocation_status(credential_id)
+print(f"    -Stato della credenziale: {'NON REVOCATA' if is_not_revoked_after_revocation else 'REVOCATA'}\n")
+
+# === STEP 4: Esito finale ===
+print("[RISULTATO FINALE] Verifica dopo la revoca:")
+if is_signature_valid_after_revocation and is_root_on_chain_after_revocation and is_not_revoked_after_revocation:
+    print("✅ Alice è autenticata e la credenziale è integra. Verifica conclusa con successo.\n")
+else:
+    print("❌ Verifica fallita: la credenziale è stata REVOCATA o uno dei controlli non è stato superato.\n")
