@@ -9,7 +9,7 @@ class Transaction:
     Rappresenta una transazione nella blockchain UniChain.
 
     Può essere di due tipi:
-    - EMISSION: indica l’emissione di una credenziale accademica (CAD).
+    - EMISSIONE: indica l’emissione di una credenziale accademica (CAD).
     - REVOCA: indica la revoca di una credenziale precedentemente emessa.
 
     Ogni transazione include:
@@ -24,7 +24,7 @@ class Transaction:
     """
 
     def __init__(self, credential_hash, credential_unique_id, student_wallet_address,
-                 revocation_status=False, transaction_type="EMISSION"):
+                 revocation_status=False, transaction_type="EMISSIONE"):
         """
         Inizializza una transazione per l’emissione o la revoca di una credenziale.
 
@@ -32,7 +32,7 @@ class Transaction:
         :param credential_unique_id: ID univoco della credenziale
         :param student_wallet_address: indirizzo hashato del wallet dello studente
         :param revocation_status: True se è una revoca, False se è un’emissione
-        :param transaction_type: "EMISSION" o "REVOCA"
+        :param transaction_type: "EMISSIONE" o "REVOCA"
         """
         self.transaction_type = transaction_type
         self.credential_hash = credential_hash

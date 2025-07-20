@@ -43,11 +43,11 @@ class Verifier:
 
     def check_merkle_root_on_chain(self, credential_id: str, claimed_merkle_root: str) -> bool:
         """
-        Verifica che la Merkle Root fornita corrisponda a quella salvata on-chain per EMISSION.
+        Verifica che la Merkle Root fornita corrisponda a quella salvata on-chain per EMISSIONE.
         """
         for block in self.blockchain.chain:
             tx = block.transaction
-            if tx.credential_unique_id == credential_id and block.transaction_type == "EMISSION":
+            if tx.credential_unique_id == credential_id and block.transaction_type == "EMISSIONE":
                 return block.attributes_merkle_root == claimed_merkle_root
         return False
 
