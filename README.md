@@ -87,7 +87,7 @@ Il sistema consente:
 3. Avvia il prototipo:
 
    ```bash
-   python main.py
+   python main_simulation.py
    ```
 
 ### 📂 Struttura del progetto
