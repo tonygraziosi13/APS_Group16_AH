@@ -41,6 +41,11 @@ u_lisboa = University("urn:ulisboa", "Universidade de Lisboa", "PT-LIS001", "Por
 for u in [u_salerno, u_bologna, u_lisboa]:
     u.request_accreditation()
 
+# === [Fase 1.3] Imposta la rete di peer (PBFT)
+all_universities = [u_rennes, u_salerno, u_bologna, u_lisboa]
+for u in all_universities:
+    u.set_peers([peer for peer in all_universities if peer != u])
+
 # === [FASE 1.4] STAMPA DEL REGISTRO PUBBLICO ===
 print("\n[Fase 1.4] REGISTRO PUBBLICO DELLE UNIVERSITÀ ACCREDITATE\n")
 registry = mobility_ca.get_public_registry()
@@ -202,7 +207,10 @@ blockchain.add_block(
     attributes_merkle_root=merkle_root
 )
 
-# Step 6 – Verifica integrità
+# Step 6 – Stampa Mobility Trust Ranking aggiornato
+mobility_ca.get_mobility_trust_ranking([u_rennes, u_salerno, u_bologna, u_lisboa])
+
+# Step 7 – Verifica integrità
 if blockchain.is_chain_valid():
     print("La blockchain UniChain è valida e coerente.")
 else:
@@ -310,6 +318,8 @@ blockchain.add_block(
 
 print("Blocco di revoca del CAD aggiunto alla blockchain UniChain.")
 
+# Stampa Mobility Trust Ranking aggiornato
+mobility_ca.get_mobility_trust_ranking([u_rennes, u_salerno, u_bologna, u_lisboa])
 
 # === [SCENARIO 1] TEST DOPO LA REVOCA: ALICE PROVA A PRESENTARE LA CREDENZIALE ===
 print("\n[Fase 7] TEST DOPO LA REVOCA: ALICE PROVA A PRESENTARE IL CAD A UNISA\n")

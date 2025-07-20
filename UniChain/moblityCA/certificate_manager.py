@@ -102,6 +102,7 @@ class CertificateManager:
 
         self._certificati_uni.append({
             "id_university": university_id,
+            "official_name": official_name,
             "certificate": cert,
             "revoked": None
         })
@@ -169,6 +170,7 @@ class CertificateManager:
             cert = entry["certificate"]
             info = {
                 "university_id": entry["id_university"],
+                "official_name": entry["official_name"],
                 "revoked": entry["revoked"],
                 "public_key": cert.public_key().public_bytes(
                     encoding=serialization.Encoding.PEM,

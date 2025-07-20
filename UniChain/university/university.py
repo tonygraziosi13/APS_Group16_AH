@@ -28,6 +28,9 @@ class University:
         # Mobility Trust Points (MTP) per ranking
         self.mobility_trust_points = 0
 
+        # === Nuovo: peer network (da settare dopo nel main)
+        self._peers = []
+
     def get_private_key(self):
         return self._private_key
 
@@ -77,12 +80,28 @@ class University:
             format=serialization.PublicFormat.SubjectPublicKeyInfo
         ).decode()
 
-    def add_trust_point(self, reason="partecipazione valida"):
+    def add_trust_point(self, points=1, reason="partecipazione valida"):
         """
         Incrementa il punteggio MTP dell’università.
         """
-        self.mobility_trust_points += 1
-        print(f"[MTP] {self.official_name} ha guadagnato 1 punto ({reason}). Totale MTP: {self.mobility_trust_points}")
+        self.mobility_trust_points += points
+        print(
+            f"[MTP] {self.official_name} ha guadagnato {points} punto/i ({reason}). Totale MTP: {self.mobility_trust_points}")
 
     def __repr__(self):
         return f"University({self.university_id}, {self.university_code})"
+
+    def set_peers(self, peer_list):
+        """
+        Imposta la lista delle università peer (oggetti University)
+        """
+        self._peers = peer_list
+
+    def get_peer_by_id(self, university_id):
+        """
+        Restituisce l'oggetto University dato l'ID, se è presente tra i peer
+        """
+        for peer in self._peers:
+            if peer.university_id == university_id:
+                return peer
+        return None

@@ -47,18 +47,18 @@ class Blockchain:
 
     def add_block(self, transaction, version, block_number, block_proposer_obj, attributes_merkle_root=None):
         """
-        Crea e firma realmente un nuovo blocco, poi lo aggiunge alla catena.
-        Il firmatario è l’università `block_proposer_obj` (oggetto University).
+        Esegue il consenso PBFT per finalizzare e aggiungere un blocco alla blockchain.
         """
-        # Controlla se l'università è accreditata
+        # Controlla se l'università proponente è accreditata
         certificate = block_proposer_obj.get_certificate()
         if self.mobility_ca.is_certificate_revoked(certificate):
-            raise Exception(f"[Blockchain] Errore: l'università {block_proposer_obj.official_name} non è più accreditata.")
+            raise Exception(
+                f"[Blockchain] Errore: l'università {block_proposer_obj.official_name} non è più accreditata.")
 
         previous_block = self.get_latest_block()
         previous_hash = previous_block.block_hash
 
-        # 1. Costruisci blocco senza firma
+        # === [Fase 1] Pre-prepare: il Primary (block_proposer) costruisce il blocco ===
         temp_block = Block(
             previous_hash=previous_hash,
             transaction=transaction,
@@ -69,24 +69,42 @@ class Blockchain:
             attributes_merkle_root=attributes_merkle_root
         )
 
-        # 2. Firma reale del blocco
         payload = temp_block.get_payload_to_sign()
         signature = block_proposer_obj.sign_message(payload).hex()
-
-        # 3. Inserisci la firma nel blocco
         temp_block.signature = signature
 
-        # 4. Aggiungi il blocco alla catena
-        self.chain.append(temp_block)
+        # === [Fase 2] Prepare: invia a tutti i Replicas per la validazione ===
+        all_unis = [u for u in self.mobility_ca.get_public_registry() if not u["revoked"]]
+        replicas = [u for u in all_unis if u["university_id"] != block_proposer_obj.university_id]
+        R = (len(all_unis) - 1) // 3
+        quorum = 2 * R + 1
 
-        # 5. Assegna 1 Mobility Trust Point all'università proponente
-        block_proposer_obj.add_trust_point(reason="blocco proposto e validato")
+        prepare_votes = 0
+        for r_dict in replicas:
+            try:
+                # Simulazione: assumiamo che ogni replica accetti
+                prepare_votes += 1
+                print(f"[PBFT] {r_dict['official_name']} → PREPARE OK.")
+            except Exception as e:
+                print(f"[PBFT] {r_dict['official_name']} → PREPARE FAIL: {e}")
 
-        # 6. Mostra Mobility Trust Ranking aggiornato
-        print(f"[Blockchain] Blocco #{block_number} aggiunto alla blockchain.")
-        print(f"   - Proposto da: {block_proposer_obj.official_name}")
-        print(f"   - Firma SHA256-RSA: {signature[:64]}...\n")
-        self.mobility_ca.get_mobility_trust_ranking(self.get_all_universities())
+        if prepare_votes >= quorum:
+            print(f"[PBFT] Quorum raggiunto ({prepare_votes}/{len(replicas)}). Commit finale del blocco.")
+            self.chain.append(temp_block)
+
+            block_proposer_obj.add_trust_point(1, reason="blocco proposto e validato")
+
+            for r_dict in replicas:
+                uni_obj = block_proposer_obj.get_peer_by_id(r_dict["university_id"])  # Da implementare
+                if uni_obj:
+                    uni_obj.add_trust_point(0.5, reason="partecipazione al consenso")
+
+            print(f"[Blockchain] Blocco #{block_number} aggiunto alla blockchain.")
+            print(f"   - Proposto da: {block_proposer_obj.official_name}")
+            print(f"   - Firma SHA256-RSA: {signature[:64]}...\n")
+        else:
+            print(f"[PBFT] Quorum NON raggiunto ({prepare_votes}/{len(replicas)}). Blocco SCARTATO.")
+            raise Exception("[PBFT] Consenso fallito. Il blocco non è stato aggiunto.")
 
     def get_all_universities(self):
         """

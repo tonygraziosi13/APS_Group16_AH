@@ -77,13 +77,6 @@ class StudentWallet:
             format=serialization.PublicFormat.SubjectPublicKeyInfo
         ).decode()
 
-    def add_trust_point(self, reason="verifica corretta"):
-        """
-        Incrementa il punteggio di affidabilità dello studente.
-        """
-        self.trust_points += 1
-        print(f"[Trust] {self.student_name} ha guadagnato 1 punto ({reason}). Totale Trust Points: {self.trust_points}")
-
     def __repr__(self):
         """
         Rappresentazione semplificata del wallet (nome e primi caratteri dell'indirizzo).
