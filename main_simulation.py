@@ -151,7 +151,7 @@ print("Alice ha ricevuto e memorizzato la credenziale nel proprio portafoglio di
 print("\n[Fase 4] ANCORAGGIO DELLA CREDENZIALE SULLA BLOCKCHAIN\n")
 
 # Step 1 – Inizializza la blockchain (crea blocco di genesi)
-blockchain = Blockchain()
+blockchain = Blockchain(mobility_ca)
 print("Blockchain inizializzata con blocco di genesi.")
 
 # Step 2 – Calcola hash del CAD (serve per la transazione)
@@ -389,3 +389,8 @@ if is_signature_valid_cert_revoked and is_root_on_chain_cert_revoked and not is_
     print("Alice è autenticata e la credenziale è integra. Verifica conclusa con successo.\n")
 else:
     print("Verifica fallita: il certificato di U_RENNES è REVOCATO o uno dei controlli non è stato superato.\n")
+
+
+# === [FASE 10] RANKING MTP FINALE ===
+print("\n[Fase 10] MOBILITY TRUST RANKING FINALE\n")
+mobility_ca.get_mobility_trust_ranking([u_rennes, u_salerno, u_bologna, u_lisboa])

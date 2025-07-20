@@ -7,6 +7,7 @@ class University:
     """
     Rappresenta una università che partecipa al sistema UniChain.
     Può richiedere accreditamento, firmare messaggi e accedere al proprio certificato pubblico.
+    Inoltre, contribuisce alla rete blockchain permissioned guadagnando Mobility Trust Points (MTP).
     """
 
     def __init__(self, university_id, official_name, university_code, location, mobility_ca):
@@ -23,6 +24,9 @@ class University:
         # Certificati rilasciati da MobilityCA
         self._certificate = None
         self._root_cert = None
+
+        # Mobility Trust Points (MTP) per ranking
+        self.mobility_trust_points = 0
 
     def get_private_key(self):
         return self._private_key
@@ -72,6 +76,13 @@ class University:
             encoding=serialization.Encoding.PEM,
             format=serialization.PublicFormat.SubjectPublicKeyInfo
         ).decode()
+
+    def add_trust_point(self, reason="partecipazione valida"):
+        """
+        Incrementa il punteggio MTP dell’università.
+        """
+        self.mobility_trust_points += 1
+        print(f"[MTP] {self.official_name} ha guadagnato 1 punto ({reason}). Totale MTP: {self.mobility_trust_points}")
 
     def __repr__(self):
         return f"University({self.university_id}, {self.university_code})"

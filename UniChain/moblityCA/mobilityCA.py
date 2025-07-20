@@ -12,6 +12,7 @@ class MobilityCA:
     - Accreditare università rilasciando certificati X.509 firmati
     - Gestire la revoca dei certificati universitari
     - Verificare firme digitali tramite certificati
+    - Gestire la graduatoria Mobility Trust Ranking (MTR)
     - Esporre un registro pubblico delle università accreditate
     """
 
@@ -27,6 +28,7 @@ class MobilityCA:
             private_key=self._private_key,
             public_key=self._public_key
         )
+        self._university_objects = {}  # Mappa university_id → oggetto University
 
     def get_validator(self):
         return self._validator
@@ -40,7 +42,7 @@ class MobilityCA:
 
     # --- API per le Università ---
 
-    def issue_certificate(self, public_key, university_id, official_name, university_code, location):
+    def issue_certificate(self, public_key, university_id, official_name, university_code, location, university_obj=None):
         """
         Rilascia un certificato digitale a una università accreditata.
         Verifica la correttezza dei parametri prima di invocare il CertificateManager.
@@ -49,6 +51,9 @@ class MobilityCA:
         self._validator.validate_only_char(official_name, "official_name")
         self._validator.validate_string(university_code, "university_code")
         self._validator.validate_only_char(location, "location")
+
+        if university_obj:
+            self._university_objects[university_id] = university_obj
 
         return self._certificate_manager.issue_certificate(
             public_key=public_key,
@@ -117,3 +122,19 @@ class MobilityCA:
         Verifica una firma digitale utilizzando il certificato fornito.
         """
         return self._certificate_manager.verify_signature(message, signature, certificate)
+
+    # --- Mobility Trust Ranking (MTR) ---
+
+    def get_mobility_trust_ranking(self, universities):
+        """
+        Restituisce la graduatoria ufficiale delle università
+        ordinata in base ai Mobility Trust Points (MTP).
+        """
+        ranking = sorted(universities, key=lambda u: u.mobility_trust_points, reverse=True)
+
+        print("\n====== MOBILITY TRUST RANKING ======")
+        for i, uni in enumerate(ranking, start=1):
+            print(f"{i}. {uni.official_name} - {uni.mobility_trust_points} MTP")
+        print("====================================\n")
+
+        return ranking

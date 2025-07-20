@@ -10,6 +10,7 @@ class StudentWallet:
     Rappresenta il wallet personale di uno studente (es. Alice).
     Gestisce la generazione di chiavi, la memorizzazione di credenziali e
     la produzione di Presentation Proof con divulgazione selettiva.
+    Supporta anche il Mobility Trust System per autenticazione in sola lettura.
     """
 
     def __init__(self, student_name="Alice"):
@@ -21,6 +22,9 @@ class StudentWallet:
 
         # Dizionario delle credenziali memorizzate: key = credential_unique_id
         self._credentials = {}
+
+        # Punti di affidabilità (facoltativi)
+        self.trust_points = 0
 
     @staticmethod
     def _generate_private_key():
@@ -44,6 +48,7 @@ class StudentWallet:
         Memorizza una credenziale nel wallet, indicizzata per ID.
         """
         self._credentials[credential_id] = credential
+        print(f"[Wallet] Credenziale {credential_id} memorizzata con successo.")
 
     def get_credential(self, credential_id: str) -> AcademicCredential:
         """
@@ -71,6 +76,13 @@ class StudentWallet:
             encoding=serialization.Encoding.PEM,
             format=serialization.PublicFormat.SubjectPublicKeyInfo
         ).decode()
+
+    def add_trust_point(self, reason="verifica corretta"):
+        """
+        Incrementa il punteggio di affidabilità dello studente.
+        """
+        self.trust_points += 1
+        print(f"[Trust] {self.student_name} ha guadagnato 1 punto ({reason}). Totale Trust Points: {self.trust_points}")
 
     def __repr__(self):
         """

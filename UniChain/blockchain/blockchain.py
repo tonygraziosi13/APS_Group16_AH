@@ -8,9 +8,10 @@ class Blockchain:
     delle transazioni di emissione e revoca dei CAD accademici.
     Ogni blocco è firmato digitalmente dall’università proponente.
     """
-    def __init__(self):
+    def __init__(self, mobility_ca):
         self.chain = []
         self.pending_transactions = []
+        self.mobility_ca = mobility_ca  # MobilityCA per controllare accrediti e ranking
         self.create_genesis_block()
 
     def create_genesis_block(self):
@@ -49,6 +50,11 @@ class Blockchain:
         Crea e firma realmente un nuovo blocco, poi lo aggiunge alla catena.
         Il firmatario è l’università `block_proposer_obj` (oggetto University).
         """
+        # Controlla se l'università è accreditata
+        certificate = block_proposer_obj.get_certificate()
+        if self.mobility_ca.is_certificate_revoked(certificate):
+            raise Exception(f"[Blockchain] Errore: l'università {block_proposer_obj.official_name} non è più accreditata.")
+
         previous_block = self.get_latest_block()
         previous_hash = previous_block.block_hash
 
@@ -73,10 +79,21 @@ class Blockchain:
         # 4. Aggiungi il blocco alla catena
         self.chain.append(temp_block)
 
-        # 5. (Facoltativo) Logging
-        print(f"Blocco #{block_number} aggiunto alla blockchain.")
-        print(f"   - Proposto da: {block_proposer_obj.university_id}")
+        # 5. Assegna 1 Mobility Trust Point all'università proponente
+        block_proposer_obj.add_trust_point(reason="blocco proposto e validato")
+
+        # 6. Mostra Mobility Trust Ranking aggiornato
+        print(f"[Blockchain] Blocco #{block_number} aggiunto alla blockchain.")
+        print(f"   - Proposto da: {block_proposer_obj.official_name}")
         print(f"   - Firma SHA256-RSA: {signature[:64]}...\n")
+        self.mobility_ca.get_mobility_trust_ranking(self.get_all_universities())
+
+    def get_all_universities(self):
+        """
+        Raccoglie tutte le università che hanno proposto almeno un blocco (escluse quelle revocate).
+        """
+        proposers = {block.block_proposer for block in self.chain if block.block_proposer != "Genesis Block"}
+        return [u for u in self.mobility_ca.get_public_registry() if u["university_id"] in proposers]
 
     def is_chain_valid(self):
         """
@@ -132,19 +149,18 @@ class Blockchain:
             attributes_merkle_root=attributes_merkle_root
         )
 
-
-def is_credential_valid(self, credential_unique_id):
-    """
-    Controlla se la credenziale con l’ID dato è valida (non revocata).
-    Restituisce True se non è stata revocata, False se esiste una revoca.
-    """
-    # Scorri la catena all’indietro per trovare la transazione più recente per quell’ID
-    for block in reversed(self.chain):
-        tx = block.transaction
-        if tx.credential_unique_id == credential_unique_id:
-            if tx.transaction_type == "REVOCA" and tx.revocation_status:
-                return False  # È stata revocata
-            elif tx.transaction_type == "EMISSIONE":
-                return True  # Trovata emissione senza revoca successiva
-    # Se non trovi nessuna transazione per quell’ID
-    return False
+    def is_credential_valid(self, credential_unique_id):
+        """
+        Controlla se la credenziale con l’ID dato è valida (non revocata).
+        Restituisce True se non è stata revocata, False se esiste una revoca.
+        """
+        # Scorri la catena all’indietro per trovare la transazione più recente per quell’ID
+        for block in reversed(self.chain):
+            tx = block.transaction
+            if tx.credential_unique_id == credential_unique_id:
+                if tx.transaction_type == "REVOCA" and tx.revocation_status:
+                    return False  # È stata revocata
+                elif tx.transaction_type == "EMISSIONE":
+                    return True  # Trovata emissione senza revoca successiva
+        # Se non trovi nessuna transazione per quell’ID
+        return False
