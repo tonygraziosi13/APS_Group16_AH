@@ -93,7 +93,7 @@ class Blockchain:
         Raccoglie tutte le università che hanno proposto almeno un blocco (escluse quelle revocate).
         """
         proposers = {block.block_proposer for block in self.chain if block.block_proposer != "Genesis Block"}
-        return [u for u in self.mobility_ca.get_public_registry() if u["university_id"] in proposers]
+        return [u for uid, u in self.mobility_ca.get_university_objects().items() if uid in proposers]
 
     def is_chain_valid(self):
         """

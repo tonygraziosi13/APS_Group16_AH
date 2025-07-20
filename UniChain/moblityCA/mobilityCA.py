@@ -33,6 +33,9 @@ class MobilityCA:
     def get_validator(self):
         return self._validator
 
+    def get_university_objects(self):
+        return self._university_objects
+
     @staticmethod
     def _generate_private_key():
         """
