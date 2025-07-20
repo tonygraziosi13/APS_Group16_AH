@@ -17,7 +17,7 @@ Il sistema consente:
 * Revoca di credenziali errate o compromesse.
 * Revoca dell’accreditamento universitario da parte dell’autorità centrale (*MobilityCA*).
 * Verifica decentralizzata della validità delle credenziali e dello stato di accreditamento delle università.
-
+* Consenso PBFT per l'aggiunta dei blocchi: le università accreditate partecipano al processo di validazione distribuita per garantire affidabilità e tolleranza ai guasti.
 ---
 
 ## 🛠️ Funzionalità principali
@@ -33,6 +33,16 @@ Il sistema consente:
 ✅ **Ancoraggio su blockchain permissioned**
 
 * Ogni CAD viene registrato come transazione con `TransactionType=EMISSION`.
+
+✅ **Consenso PBFT (Practical Byzantine Fault Tolerance)**
+
+* Il consenso per l'inserimento di nuovi blocchi è gestito tramite PBFT.
+
+* L'università proponente costruisce e firma il blocco (fase Pre-prepare).
+
+* Tutte le altre università accreditate (repliche) verificano e confermano la proposta (fase Prepare).
+
+* Se il quorum è raggiunto, il blocco viene finalizzato e aggiunto alla blockchain (fase Commit).
 
 ✅ **Divulgazione selettiva**
 
@@ -139,6 +149,10 @@ UniChain/
 ### ⛓️ 3. Ancoraggio su blockchain
 
 * Il CAD viene registrato sulla blockchain come transazione `TransactionType=EMISSIONE`.
+* Le università partecipano al consenso PBFT per validare e aggiungere il blocco:
+  * Pre-prepare: proposta blocco da parte dell’università proponente.
+  * Prepare: repliche verificano la validità.
+  * Commit: se raggiunto il quorum, il blocco viene aggiunto.
 
 ### 🔏 4. Presentazione selettiva
 
