@@ -11,7 +11,7 @@ class Blockchain:
     def __init__(self, mobility_ca):
         self.chain = []
         self.pending_transactions = []
-        self.mobility_ca = mobility_ca  # MobilityCA per controllare accrediti e ranking
+        self.mobility_ca = mobility_ca
         self.create_genesis_block()
 
     def create_genesis_block(self):
