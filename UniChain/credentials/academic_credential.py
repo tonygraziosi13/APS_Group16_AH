@@ -16,7 +16,7 @@ class AcademicCredential:
     Contiene informazioni su:
     - Studente (credentialSubject)
     - Titolo di studio (degree)
-    - Iscrizione e carriera (enrollement)
+    - Iscrizione e carriera (enrollment)
     - Periodo di validità (validityPeriod)
     - Istituzione emittente (issuer)
     - Esami sostenuti (exams)
@@ -25,13 +25,13 @@ class AcademicCredential:
     """
 
     def __init__(self, subject: CredentialSubject, degree: Degree,
-                 enrollement: Enrollment, validity: ValidityPeriod,
+                 enrollment: Enrollment, validity: ValidityPeriod,
                  issuer: Issuer, exams: list[ExamRecord],
                  optional_activities: list[OptionalActivity] = None,
                  proof: Proof = None):
         self.credentialSubject = subject
         self.degree = degree
-        self.enrollement = enrollement
+        self.enrollment = enrollment
         self.validityPeriod = validity
         self.issuer = issuer
         self.exams = exams
@@ -54,7 +54,7 @@ class AcademicCredential:
         return {
             "credentialSubject": self.credentialSubject.to_dict(),
             "degree": self.degree.to_dict(),
-            "enrollement": self.enrollement.to_dict(),
+            "enrollment": self.enrollment.to_dict(),
             "validityPeriod": self.validityPeriod.to_dict(),
             "issuer": self.issuer.to_dict(),
             "exams": [exam.to_dict() for exam in self.exams],
