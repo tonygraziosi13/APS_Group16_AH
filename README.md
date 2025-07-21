@@ -36,7 +36,7 @@ Le misurazioni sono state effettuate tramite script Python integrati (`performan
 
 ✅ **Ancoraggio su blockchain permissioned**
 
-* Ogni CAD viene registrato come transazione con `TransactionType=EMISSION`.
+* Ogni CAD viene registrato come transazione con `TransactionType=EMISSIONE`.
 
 ✅ **Consenso PBFT (Practical Byzantine Fault Tolerance)**
 
