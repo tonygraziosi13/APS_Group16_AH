@@ -18,6 +18,9 @@ Il sistema consente:
 * Revoca dell’accreditamento universitario da parte dell’autorità centrale (*MobilityCA*).
 * Verifica decentralizzata della validità delle credenziali e dello stato di accreditamento delle università.
 * Consenso PBFT per l'aggiunta dei blocchi: le università accreditate partecipano al processo di validazione distribuita per garantire affidabilità e tolleranza ai guasti.
+Sono stati condotti test di performance per valutare la latenza delle operazioni crittografiche principali (hash, firma, verifica, Merkle Proof) e la dimensione serializzata delle credenziali e delle presentazioni selettive.  
+Le misurazioni sono state effettuate tramite script Python integrati (`performance_test.py`) su ambiente locale.
+
 ---
 
 ## 🛠️ Funzionalità principali
